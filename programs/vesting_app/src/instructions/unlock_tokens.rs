@@ -2,7 +2,7 @@ use anchor_lang::prelude::*;
 use anchor_spl::{
     associated_token::AssociatedToken,
     token::{self, Transfer},
-    token_interface::{TokenAccount, TokenInterface},
+    token_interface::{Mint, TokenAccount, TokenInterface},
 };
 
 use crate::state::Vesting;
@@ -14,13 +14,14 @@ pub struct UnlockTokens<'info> {
 
     #[account(mut,seeds=[b"vesting",vesting_account.receiver.as_ref(),vesting_account.token_mint.as_ref()],bump=vesting_account.bump)]
     pub vesting_account: Account<'info, Vesting>,
-    #[account(mut,associated_token::mint=vesting_account.token_mint,associated_token::authority=vesting_account)]
+    #[account(mut,associated_token::mint=token_to_vest_mint,associated_token::authority=vesting_account)]
     pub vesting_token_account: InterfaceAccount<'info, TokenAccount>,
-    #[account(mut,associated_token::mint=vesting_account.token_mint,associated_token::authority=vesting_account.receiver)]
+    #[account(init_if_needed,payer=signer,associated_token::mint=token_to_vest_mint,associated_token::authority=signer)]
     pub receiver_token_account: InterfaceAccount<'info, TokenAccount>,
     pub token_program: Interface<'info, TokenInterface>,
     pub associated_token_program: Program<'info, AssociatedToken>,
-
+    #[account(constraint=token_to_vest_mint.key()==vesting_account.token_mint)]
+    pub token_to_vest_mint: InterfaceAccount<'info, Mint>,
     pub system_program: Program<'info, System>,
 }
 
