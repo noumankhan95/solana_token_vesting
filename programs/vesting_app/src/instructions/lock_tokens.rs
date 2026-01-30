@@ -37,5 +37,6 @@ pub fn initialize_vesting(
     vesting_acc.receiver = receiver;
     vesting_acc.token_mint = ctx.accounts.token_to_vest_mint.key();
     vesting_acc.bump = ctx.bumps.vesting_account;
+    vesting_acc.released = 0;
     Ok(())
 }
