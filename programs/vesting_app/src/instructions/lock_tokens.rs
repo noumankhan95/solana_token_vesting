@@ -3,6 +3,7 @@ use anchor_lang::prelude::*;
 use crate::state::Vesting;
 use anchor_spl::{
     associated_token::AssociatedToken,
+    token::{self, Transfer},
     token_interface::{Mint, TokenAccount, TokenInterface},
 };
 #[derive(Accounts)]
@@ -29,6 +30,13 @@ pub fn initialize_vesting(
     cliff_time: i64,
     receiver: Pubkey,
 ) -> Result<()> {
+    let transfer_acc = Transfer {
+        authority: ctx.accounts.signer.to_account_info(),
+        from: ctx.accounts.vested_tokens.to_account_info(),
+        to: ctx.accounts.vesting_token_account.to_account_info(),
+    };
+    let cpi_ctx = CpiContext::new(ctx.accounts.token_program.to_account_info(), transfer_acc);
+    token::transfer(cpi_ctx, amount)?;
     let vesting_acc = &mut ctx.accounts.vesting_account;
     vesting_acc.amount = amount;
     vesting_acc.cliff_time = cliff_time;
